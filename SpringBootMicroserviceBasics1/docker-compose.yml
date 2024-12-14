@@ -1,0 +1,131 @@
+
+services:
+  mysqldb-order-service:
+    image: mysql
+    container_name: mysqldb-order-service-MySQL
+    restart: always
+    env_file:
+      - ./.env
+    networks:
+      ms-mysql-network:
+         ipv4_address: 172.26.0.2
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE_USER}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_DATABASE_PASSWORD}
+    ports:
+      - "3306:3306"
+  mysqldb-payment-service:
+    image: mysql
+    container_name: mysqldb-payment-service-MySQL
+    restart: always
+    env_file:
+      - ./.env
+    networks:
+      ms-mysql-network:
+         ipv4_address: 172.26.0.3
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE_USER}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_DATABASE_PASSWORD}
+    ports:
+      - "3307:3306"
+  mysqldb-security-service:
+    image: mysql
+    container_name: mysqldb-security-service-MySQL
+    restart: always
+    env_file:
+      - ./.env
+    networks:
+      ms-mysql-network:
+         ipv4_address: 172.26.0.4
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE_USER}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_DATABASE_PASSWORD}
+    ports:
+      - "3308:3306"
+  order-service:
+    build:
+      context: .
+      dockerfile: order-service.Dockerfile
+    restart: always
+    env_file:
+      - ./.env
+    network_mode: host
+    container_name: ms-order-service
+    ports:
+      - "9097:9097"
+    depends_on:
+      - mysqldb-order-service
+      - service-registry
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://172.26.0.2:3306/order-service?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=${MYSQL_DATABASE_USER}
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_DATABASE_PASSWORD}
+  payment-service:
+    build:
+      context: .
+      dockerfile: payment-service.Dockerfile
+    restart: always
+    env_file:
+      - ./.env
+    network_mode: host
+    container_name: ms-payment-service
+    ports:
+      - "9096:9096"
+    depends_on:
+      - mysqldb-payment-service
+      - service-registry
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://172.26.0.3:3306/payment-service?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=${MYSQL_DATABASE_USER}
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_DATABASE_PASSWORD}
+  security-service:
+    build:
+      context: .
+      dockerfile: security-service.Dockerfile
+    restart: always
+    env_file:
+      - ./.env
+    network_mode: host
+    container_name: ms-security-service
+    ports:
+      - "9098:9098"
+    depends_on:
+      - mysqldb-security-service
+      - service-registry
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://172.26.0.4:3306/security-service?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=${MYSQL_DATABASE_USER}
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_DATABASE_PASSWORD}
+  service-registry:
+    build:
+      context: .
+      dockerfile: service-registry.Dockerfile
+    restart: always
+    network_mode: host
+    container_name: ms-service-registry
+    ports:
+      - "8761:8761"
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway.Dockerfile
+    restart: always
+    env_file:
+      - ./.env
+    network_mode: host
+    container_name: ms-api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - service-registry
+      - security-service
+      - order-service
+      - payment-service
+
+networks:
+  ms-mysql-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.26.0.0/16
+          gateway: 172.26.0.1
