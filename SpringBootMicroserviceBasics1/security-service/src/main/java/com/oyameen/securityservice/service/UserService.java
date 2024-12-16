@@ -17,11 +17,9 @@ import java.util.stream.Collectors;
 public class UserService {
 
     @Autowired
-    private JWTService jwtService;
-
-    @Autowired
     AuthenticationManager authenticationManager;
-
+    @Autowired
+    private JWTService jwtService;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -29,10 +27,9 @@ public class UserService {
     private UserRepository userRepository;
 
 
-
     public User register(LoginDto loginDto) {
         User user = new User(loginDto.getUserName(), loginDto.getUserEmail(),
-                passwordEncoder.encode(loginDto.getPassword()),"USER","");
+                passwordEncoder.encode(loginDto.getPassword()), "USER", "");
         userRepository.save(user);
         return user;
     }

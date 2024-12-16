@@ -14,17 +14,14 @@ import org.springframework.web.server.ServerWebExchange;
 @Component
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
 
+    @Autowired
+    private JWTService jwtService;
+    @Autowired
+    private RouteValidator routeValidator;
+
     public AuthenticationFilter() {
         super(Config.class);
     }
-
-    public static class Config {}
-
-    @Autowired
-    private JWTService jwtService;
-
-    @Autowired
-    private RouteValidator routeValidator;
 
     @Override
     public GatewayFilter apply(Config config) {
@@ -41,8 +38,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 try {
                     if (jwtService.validateToken(authHeader)) {
                         serverHttpRequest = populateRequestWithHeaders(exchange, authHeader);
-                    }
-                    else {
+                    } else {
                         System.out.println("invalid/UnAuthorized access!");
                     }
                 } catch (Exception e) {
@@ -53,12 +49,16 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             return chain.filter(exchange.mutate().request(serverHttpRequest).build());
         });
     }
+
     private ServerHttpRequest populateRequestWithHeaders(ServerWebExchange exchange, String token) {
         Claims claims = jwtService.extractAllClaims(token);
         return exchange.getRequest()
                 .mutate()
-                .header("userEmail",claims.getSubject())
+                .header("userEmail", claims.getSubject())
                 .header("roles", String.valueOf(claims.get("roles")))
                 .build();
+    }
+
+    public static class Config {
     }
 }

@@ -14,34 +14,30 @@ public class PaymentService {
     @Autowired
     private PaymentRepository paymentRepository;
 
-    public Payment getPaymentByOrderId(int orderId)
-    {
+    public static void validateAccess(Map<String, String> headers) {
+        if (headers == null || headers.isEmpty() || !headers.containsKey("useremail") || !headers.containsKey("roles")) {
+            throw new BadPaymentRequestException("Request headers must contains userEmail and roles.");
+        }
+        if (headers.get("roles") == null || headers.get("roles").isEmpty()) {
+            throw new BadPaymentRequestException("Headers role should not be empty.");
+        }
+        List<String> roles = Arrays.asList(headers.get("roles").split(","));
+        if (!roles.contains("ROLE_ADMIN") && !roles.contains("ROLE_USER")) {
+            throw new BadPaymentRequestException("Payment service api, must be accessed by admin or normal user only.");
+        }
+    }
+
+    public Payment getPaymentByOrderId(int orderId) {
         Payment payment = paymentRepository.findByOrderId(orderId).orElse(null);
-        if (payment == null)
-        {
+        if (payment == null) {
             throw new BadPaymentRequestException("Payment with order id = [ " + orderId + " ], not found.");
         }
         return payment;
     }
-    public Payment makePayment(Payment payment)
-    {
+
+    public Payment makePayment(Payment payment) {
         payment.setTransactionId(UUID.randomUUID().toString());
-        payment.setStatus(new Random().nextBoolean() ? "SUCCESS" : "FAILED" );
+        payment.setStatus(new Random().nextBoolean() ? "SUCCESS" : "FAILED");
         return paymentRepository.save(payment);
-    }
-    public static void validateAccess(Map<String, String> headers) {
-        if (headers == null || headers.isEmpty() || !headers.containsKey("useremail") || !headers.containsKey("roles"))
-        {
-            throw new BadPaymentRequestException("Request headers must contains userEmail and roles.");
-        }
-        if (headers.get("roles") == null || headers.get("roles").isEmpty())
-        {
-            throw new BadPaymentRequestException("Headers role should not be empty.");
-        }
-        List<String> roles = Arrays.asList(headers.get("roles").split(","));
-        if (!roles.contains("ROLE_ADMIN") && !roles.contains("ROLE_USER"))
-        {
-            throw new BadPaymentRequestException("Payment service api, must be accessed by admin or normal user only.");
-        }
     }
 }

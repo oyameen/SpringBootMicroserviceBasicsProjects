@@ -27,14 +27,12 @@ public class OrderService {
     @Value("${microservice.payment-service.endpoint.uri}")
     private String ENDPOINT_URL;
 
-    public OrderResponseDto saveOrder(Order order, Map<String, String> headers){
+    public OrderResponseDto saveOrder(Order order, Map<String, String> headers) {
 
-        if (order.getId() <= 0)
-        {
+        if (order.getId() <= 0) {
             throw new BadOrderRequestException("Order id cannot be less than or equal zero.");
         }
-        if (orderRepository.existsById(order.getId()))
-        {
+        if (orderRepository.existsById(order.getId())) {
             throw new BadOrderRequestException("Order with id = [ " + order.getId() + " ], already exist.");
         }
         PaymentDto paymentDto = new PaymentDto();
@@ -43,10 +41,10 @@ public class OrderService {
         paymentDto.setAmount(order.getPrice());
         HttpHeaders httpHeaders = new HttpHeaders();
         headers.forEach(httpHeaders::add);
-        HttpEntity<PaymentDto> httpEntity = new HttpEntity<>(paymentDto,httpHeaders);
+        HttpEntity<PaymentDto> httpEntity = new HttpEntity<>(paymentDto, httpHeaders);
         PaymentDto paymentResponse = template.postForObject(ENDPOINT_URL, httpEntity, PaymentDto.class);
         orderRepository.save(order);
 
-        return new OrderResponseDto(paymentResponse,order);
+        return new OrderResponseDto(paymentResponse, order);
     }
 }

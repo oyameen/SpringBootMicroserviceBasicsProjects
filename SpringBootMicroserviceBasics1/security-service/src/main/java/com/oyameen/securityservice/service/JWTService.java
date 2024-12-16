@@ -25,7 +25,7 @@ public class JWTService {
         return Jwts.builder()
                 .claims()
                 .add(claims)
-                .add("roles",authorities)
+                .add("roles", authorities)
                 .subject(userEmail)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 10)) // 10 min

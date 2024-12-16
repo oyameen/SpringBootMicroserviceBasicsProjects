@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
 import java.util.Map;
 
 @RestController
@@ -26,16 +25,14 @@ public class OrderController {
 
     @PostMapping("/addOrder")
     @CircuitBreaker(name = ORDER_SERVICE, fallbackMethod = "paymentServiceUnavailableFallback")
-    @Retry(name = ORDER_SERVICE,fallbackMethod = "paymentServiceRetryFallback")
-    public ResponseEntity<OrderResponseDto> addOrder(@RequestBody Order order, @RequestHeader Map<String,String> headers)
-    {
+    @Retry(name = ORDER_SERVICE, fallbackMethod = "paymentServiceRetryFallback")
+    public ResponseEntity<OrderResponseDto> addOrder(@RequestBody Order order, @RequestHeader Map<String, String> headers) {
         log.info("addOrder api invoked by userEmail = {}", headers.get("useremail"));
         return ResponseEntity.ok(orderService.saveOrder(order, headers));
     }
-    public ResponseEntity<ErrorModel> paymentServiceUnavailableFallback(Exception e)
-    {
-        if (e instanceof BadOrderRequestException exception)
-        {
+
+    public ResponseEntity<ErrorModel> paymentServiceUnavailableFallback(Exception e) {
+        if (e instanceof BadOrderRequestException exception) {
             throw exception;
         }
         return ResponseEntity.status(503).body(new ErrorModel(
@@ -45,10 +42,9 @@ public class OrderController {
                 e.getMessage()
         ));
     }
-    public ResponseEntity<ErrorModel> paymentServiceRetryFallback(Exception e)
-    {
-        if (e instanceof BadOrderRequestException exception)
-        {
+
+    public ResponseEntity<ErrorModel> paymentServiceRetryFallback(Exception e) {
+        if (e instanceof BadOrderRequestException exception) {
             throw exception;
         }
         return ResponseEntity.status(503).body(new ErrorModel(

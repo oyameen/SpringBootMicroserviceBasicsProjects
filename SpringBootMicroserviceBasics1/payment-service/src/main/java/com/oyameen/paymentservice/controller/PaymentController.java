@@ -6,8 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import static com.oyameen.paymentservice.service.PaymentService.validateAccess;
@@ -21,17 +19,15 @@ public class PaymentController {
     private PaymentService paymentService;
 
     @GetMapping("/{orderId}")
-    public Payment getPaymentByOrderId(@PathVariable int orderId, @RequestHeader Map<String,String> headers)
-    {
+    public Payment getPaymentByOrderId(@PathVariable int orderId, @RequestHeader Map<String, String> headers) {
         validateAccess(headers);
         log.info("getPaymentByOrderId api invoked by userEmail = {}", headers.get("useremail"));
         return paymentService.getPaymentByOrderId(orderId);
     }
 
 
-
     @PostMapping("/makePayment")
-    public Payment makePayment(@RequestBody Payment payment, @RequestHeader Map<String,String> headers) {
+    public Payment makePayment(@RequestBody Payment payment, @RequestHeader Map<String, String> headers) {
         validateAccess(headers);
         log.info("makePayment api invoked by userEmail = {}", headers.get("useremail"));
         return paymentService.makePayment(payment);
